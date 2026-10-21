@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run unit tests
+        run: |
+          if grep -qx broken mode.txt; then
+            echo "FAILED tests/test_cart.py::test_total - AssertionError: expected 42, got 41"
+            exit 1
+          fi
+          echo "12 passed"
+
+  integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run integration tests
+        run: |
+          if grep -qx flaky mode.txt && [ "${{ github.run_attempt }}" = "1" ]; then
+            echo "FAILED tests/test_api.py::test_checkout - ConnectionResetError: [Errno 104] Connection reset by peer"
+            exit 1
+          fi
+          echo "5 passed"
